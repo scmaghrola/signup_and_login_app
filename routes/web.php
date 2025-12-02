@@ -3,6 +3,8 @@
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\SignupController;
 use App\Livewire\Counter;
+use App\Livewire\ContactForm;
+use App\Livewire\ContactManager;
 
 Route::get('/signup', [SignupController::class, 'index'])->name('signup.form');
 Route::post('/signup', [SignupController::class, 'signUp'])->name('signup');
@@ -14,3 +16,10 @@ Route::get('/home', fn() => view('home'))->name('home');
 
  
 Route::get('/counter', Counter::class);
+
+
+Route::get('/contact', ContactForm::class)->name('contact');
+
+
+
+Route::get('/contacts', ContactManager::class)->name('contacts');

@@ -20,7 +20,7 @@ class Counter extends Component
  
     public function render()
     {
-        info("hellow world");
-        return view('livewire.counter');
+        info("counter render called");
+        return view('livewire.counter')->layout('layouts.app');
     }
 }

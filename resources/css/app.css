@@ -1,11 +1,18 @@
-@import 'tailwindcss';
+/* Custom app styles (Bootstrap is loaded via CDN in layout) */
 
-@source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php';
-@source '../../storage/framework/views/*.php';
-@source '../**/*.blade.php';
-@source '../**/*.js';
+body {
+    background-color: #f8f9fa;
+}
 
-@theme {
-    --font-sans: 'Instrument Sans', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji',
-        'Segoe UI Symbol', 'Noto Color Emoji';
+.card-contact {
+    border-radius: 12px;
+}
+
+.avatar-circle {
+    width: 44px;
+    height: 44px;
+    border-radius: 9999px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
 }

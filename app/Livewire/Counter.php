@@ -20,6 +20,7 @@ class Counter extends Component
  
     public function render()
     {
+        info("hellow world");
         return view('livewire.counter');
     }
 }

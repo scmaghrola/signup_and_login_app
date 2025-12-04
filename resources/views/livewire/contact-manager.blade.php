@@ -13,7 +13,7 @@
         <input type="text" wire:model.live.debounce.500ms="search" placeholder="Search Name..." class="form-control">
         <div class="mt-2 text-muted small">
             Showing <strong>{{ $contacts->total() ?? 0 }}</strong> result(s)
-            @if($search)
+            @if ($search)
                 for "<em>{{ $search }}</em>"
             @endif
         </div>
@@ -25,17 +25,23 @@
 
         <div class="mb-2">
             <input type="text" wire:model="name" placeholder="Name" class="form-control">
-            @error('name') <span class="text-danger">{{ $message }}</span> @enderror
+            @error('name')
+                <span class="text-danger">{{ $message }}</span>
+            @enderror
         </div>
 
         <div class="mb-2">
             <input type="email" wire:model="email" placeholder="Email" class="form-control">
-            @error('email') <span class="text-danger">{{ $message }}</span> @enderror
+            @error('email')
+                <span class="text-danger">{{ $message }}</span>
+            @enderror
         </div>
 
         <div class="mb-2">
             <textarea wire:model="message" placeholder="Message" class="form-control"></textarea>
-            @error('message') <span class="text-danger">{{ $message }}</span> @enderror
+            @error('message')
+                <span class="text-danger">{{ $message }}</span>
+            @enderror
         </div>
 
         <div class="mb-2">
@@ -43,16 +49,20 @@
             <input type="file" wire:model="photo" class="form-control">
             @if ($photo)
                 <div class="mt-2">
-                    <img src="{{ $photo->temporaryUrl() }}" alt="preview" style="max-width:120px; max-height:120px; object-fit:cover;" class="rounded">
+                    <img src="{{ $photo->temporaryUrl() }}" alt="preview"
+                        style="max-width:120px; max-height:120px; object-fit:cover;" class="rounded">
                 </div>
             @endif
-            @error('photo') <span class="text-danger">{{ $message }}</span> @enderror
+            @error('photo')
+                <span class="text-danger">{{ $message }}</span>
+            @enderror
         </div>
 
         <div>
             @if ($isEdit)
                 <button wire:click="update" class="btn btn-success">Update</button>
-                <button wire:click="$set('isEdit', false); $reset(['name','email','message','photo'])" class="btn btn-secondary">Cancel</button>
+                <button wire:click="$set('isEdit', false); $reset(['name','email','message','photo'])"
+                    class="btn btn-secondary">Cancel</button>
             @else
                 <button wire:click="store" class="btn btn-primary">Add</button>
             @endif
@@ -63,9 +73,38 @@
     <table class="table table-bordered align-middle">
         <thead>
             <tr>
+                <th colspan="6" class="text-end">
+                    <label for="sortBy">sortBy</label>
+                    <select wire:model.change="sortOption" id="sortBy" class="form-select d-inline-block w-auto">
+                        <option value="name ASC">Name (A-Z)</option>
+                        <option value="name DESC">Name (Z-A)</option>
+                        <option value="created_at ASC">Created At (Oldest First)</option>
+                        <option value="created_at DESC">Created At (Newest First)</option>
+                        <option value="updated_at ASC">Updated At (Oldest First)</option>
+                        <option value="updated_at DESC">Updated At (Newest First)</option>
+                    </select>
+                    <select wire:model.change="limit" id="sortBy" class="form-select d-inline-block w-auto">
+                        <option value="5">5</option>
+                        <option value="10">10</option>
+                        <option value="15">20</option>
+                        <option value="50">50</option>
+                        <option value="100">100</option>
+                    </select>
+                </th>
+            </tr>
+            <tr>
                 <th>ID</th>
                 <th>Photo</th>
-                <th>Name</th>
+                <th>
+                    Name
+                    @if ($sortField == 'name')
+                        @if ($sortDirection == 'asc')
+                            ▲
+                        @else
+                            ▼
+                        @endif
+                    @endif
+                </th>
                 <th>Email</th>
                 <th>Message</th>
                 <th width="180px">Action</th>
@@ -73,14 +112,17 @@
         </thead>
 
         <tbody>
-            @foreach ($contacts as $contact)
+            @forelse ($contacts as $contact)
                 <tr>
                     <td>{{ $contact->id }}</td>
                     <td>
                         @if ($contact->photo)
-                            <img src="{{ asset('storage/' . $contact->photo) }}" alt="photo" style="width:56px;height:56px;object-fit:cover;border-radius:8px;">
+                            <img src="{{ asset('storage/' . $contact->photo) }}" alt="photo"
+                                style="width:56px;height:56px;object-fit:cover;border-radius:8px;">
                         @else
-                            <div style="width:56px;height:56px;background:#f1f1f1;border-radius:8px;display:inline-block;"></div>
+                            <div
+                                style="width:56px;height:56px;background:#f1f1f1;border-radius:8px;display:inline-block;">
+                            </div>
                         @endif
                     </td>
                     <td>{{ $contact->name }}</td>
@@ -91,7 +133,14 @@
                         <button wire:click="delete({{ $contact->id }})" class="btn btn-danger btn-sm">Delete</button>
                     </td>
                 </tr>
-            @endforeach
+
+            @empty
+                <tr>
+                    <td colspan="10">
+                        <center><b>No Records Found!</center> </b>
+                    </td>
+                </tr>
+            @endforelse
         </tbody>
     </table>
 

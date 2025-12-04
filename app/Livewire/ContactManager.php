@@ -10,13 +10,31 @@ use Illuminate\Support\Facades\Storage;
 
 class ContactManager extends Component
 {
+
+    use WithPagination, WithFileUploads;
+
     public $name, $email, $message, $contact_id;
     public $photo;
     public $search = '';
     public $isEdit = false;
 
-    use WithPagination;
-    use WithFileUploads;
+    public $sortField = 'id';
+    public $sortDirection = 'asc';
+    public $limit = 5;
+
+    public $sortOption = 'id asc';
+
+    
+
+    protected $listeners = ['contactAdded' => 'refreshList'];
+
+    protected $queryString = [
+        'search' => ['except' => ''],
+        // 'sortField' => ['except' => 'id'],
+        // 'sortDirection' => ['except' => 'asc'],
+        'sortOption' => ['except' => 'id asc'],
+        'limit' => ['except' => '5'],
+    ];
 
     public function updatingSearch()
     {
@@ -26,17 +44,34 @@ class ContactManager extends Component
 
     public function render()
     {
+
+        info('render calledddddddddddddddddd');
         $contacts = Contact::when($this->search, function ($query) {
-            info('updatingSearch calledddddddddddddddddddddd');
             $term = '%' . $this->search . '%';
             $query->where(function ($q) use ($term) {
                 $q->where('name', 'like', $term)
-                  ->orWhere('email', 'like', $term)
-                  ->orWhere('message', 'like', $term);
+                    ->orWhere('email', 'like', $term)
+                    ->orWhere('message', 'like', $term);
             });
-        })
-        ->orderBy('id', 'desc')
-        ->paginate(5);
+        });
+
+        // $sort = request()->get('sort') ?? 'name_asc';
+        // if ($sort == 'name_asc') {
+        //     $contacts = $contacts->orderBy('name', 'ASC');
+        // } elseif ($sort == 'name_desc') {
+        //     $contacts = $contacts->orderBy('name', 'DESC');
+        // } elseif ($sort == 'update_at_asc') {
+        //     $contacts = $contacts->orderBy('update_at', 'ASC');
+        // } elseif ($sort == 'update_at_desc') {
+        //     $contacts = $contacts->orderBy('update_at', 'DESC');
+        // } elseif ($sort == 'id_asc') {
+        //     $contacts = $contacts->orderBy('id', 'ASC');
+        // }
+
+        // $contacts = $contacts->orderBy($this->sortField, $this->sortDirection);
+        $contacts = $contacts->orderByRaw($this->sortOption);
+
+        $contacts = $contacts->paginate($this->limit);
 
         return view('livewire.contact-manager', [
             'contacts' => $contacts,
@@ -62,11 +97,19 @@ class ContactManager extends Component
             $data['photo'] = $path;
         }
 
-        Contact::create($data);
+        $contact = Contact::create($data);
 
         session()->flash('success', 'Contact Added Successfully');
 
+        $this->dispatch('contactAdded', $contact);
+
         $this->reset(['name', 'email', 'message', 'photo']);
+    }
+
+    public function refreshList($contact)
+    {
+        info("New contact added: ");
+        info($contact);
     }
 
     public function edit($id)
@@ -113,15 +156,72 @@ class ContactManager extends Component
         $this->isEdit = false;
     }
 
+    public function updatedSortOption($value)
+    {
+        if (str_starts_with($value, '-')) {
+            $this->sortDirection = 'desc';
+            $this->sortField = ltrim($value, '-');
+        } else {
+            $this->sortDirection = 'asc';
+            $this->sortField = $value;
+        }
+
+        $this->resetPage();
+    }
+
+
+
 
     public function delete($id)
     {
+
+        $currentPage = $this->getPage();
+
         $contact = Contact::findOrFail($id);
         if ($contact->photo) {
             Storage::disk('public')->delete($contact->photo);
         }
         $contact->delete();
 
+        $contacts = Contact::when($this->search, function ($query) {
+            $term = '%' . $this->search . '%';
+            $query->where(function ($q) use ($term) {
+                $q->where('name', 'like', $term)
+                    ->orWhere('email', 'like', $term)
+                    ->orWhere('message', 'like', $term);
+            });
+        })
+            ->orderBy('id', 'ASC')
+            ->paginate($this->limit);
+
+        if ($currentPage > $contacts->lastPage()) {
+            $this->setPage($currentPage - 1);
+        } else {
+            info('elseeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee');
+        }
+
         session()->flash('success', 'Contact Deleted Successfully');
     }
+
+    // public function sortBy($field)
+    // {
+    //     // if clicking the same field → toggle ASC/DESC
+    //     if ($this->sortField === $field) {
+    //         $this->sortDirection = $this->sortDirection === 'asc' ? 'desc' : 'asc';
+    //     } else {
+    //         // new field → reset to ASC
+    //         $this->sortField = $field;
+    //         $this->sortDirection = 'asc';
+    //     }
+
+    //     // Reset to page 1 when sorting changes
+    //     $this->resetPage();
+    // }
+
+    // public function sortOption()
+    // {
+        
+    // }
+
+
 }
